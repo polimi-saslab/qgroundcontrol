@@ -145,7 +145,8 @@ just test "Slow" "Network"             # override via positional args (labels, e
 | ------------- | ------------------------------------------------------------------------------- |
 | `just run`    | Launch the built `QGroundControl` binary                                        |
 | `just docs`   | Build the VitePress documentation site (`npm run docs:build`)                   |
-| `just docker` | Build in Ubuntu with `run_docker.py build ubuntu`                               |
+| `just docker` | Build a Release AppImage in Ubuntu 22.04 (`build-docker/`)                      |
+| `just docker-24` | Build a Release AppImage in Ubuntu 24.04 (`build-docker-2404/`)                |
 
 ### Utilities
 

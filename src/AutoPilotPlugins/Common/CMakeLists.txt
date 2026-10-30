@@ -100,6 +100,7 @@ qt_add_resources(${CMAKE_PROJECT_NAME} autopilot_plugin_common_airframes
         "${CMAKE_SOURCE_DIR}/src/AutoPilotPlugins/Common/Images/VTOLPlaneOcto.svg"
         "${CMAKE_SOURCE_DIR}/src/AutoPilotPlugins/Common/Images/VTOLQuadRotorTailSitter.svg"
         "${CMAKE_SOURCE_DIR}/src/AutoPilotPlugins/Common/Images/VTOLTiltRotor.svg"
+        "${CMAKE_SOURCE_DIR}/src/AutoPilotPlugins/Common/Images/VP2_01.svg"
         "${CMAKE_SOURCE_DIR}/src/AutoPilotPlugins/Common/Images/Y6A.svg"
         "${CMAKE_SOURCE_DIR}/src/AutoPilotPlugins/Common/Images/Y6B.svg"
         "${CMAKE_SOURCE_DIR}/src/AutoPilotPlugins/Common/Images/YMinus.svg"

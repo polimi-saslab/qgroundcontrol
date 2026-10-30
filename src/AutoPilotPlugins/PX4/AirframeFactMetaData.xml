@@ -391,6 +391,12 @@
       <type>VTOL Tailsitter</type>
     </airframe>
   </airframe_group>
+  <airframe_group name="Windplane" image="VP2_01">
+    <airframe name="VP2 01" id="13201" maintainer="John Doe &lt;john@example.com&gt;">
+      <class>VTOL</class>
+      <type>VTOL Tailsitter</type>
+    </airframe>
+  </airframe_group>  
   <airframe_group name="VTOL Tiltrotor" image="VTOLTiltRotor">
     <airframe name="Generic Quadplane VTOL Tiltrotor" id="13030" maintainer="">
       <class>VTOL</class>
