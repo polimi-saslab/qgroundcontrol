@@ -115,9 +115,13 @@ run:
 docs:
     npm run docs:build
 
-# Build using Docker (Ubuntu)
+# Build using Docker (Ubuntu 22.04)
 docker:
-    python3 deploy/docker/run_docker.py build ubuntu
+    BUILD_DIR=build-docker python3 deploy/docker/run_docker.py build ubuntu-2204
+
+# Build using Docker (Ubuntu 24.04)
+docker-24:
+    BUILD_DIR=build-docker-2404 python3 deploy/docker/run_docker.py build ubuntu
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Utilities
