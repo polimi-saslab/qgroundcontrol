@@ -194,11 +194,30 @@ ApplicationWindow {
         _showMessageDialogWorker(mainWindow, dialogTitle, dialogText)
     }
 
+    function _showMissingParameterDialog(dialogTitle, dialogText) {
+        if (_missingParameterDialog || _suppressMissingParameterWarning) {
+            return
+        }
+
+        _missingParameterDialog = missingParameterDialogFactory.open({
+            title: dialogTitle,
+            warningText: dialogText
+        })
+    }
+
     Connections {
         target: QGroundControl
 
         function onShowMessageDialogRequested(owner, title, text, buttons, acceptFunction, closeFunction) {
             _showMessageDialogWorker(owner, title, text, buttons, acceptFunction, closeFunction)
+        }
+    }
+
+    Connections {
+        target: qgcApplication
+
+        function onMissingParameterWarningRequested(title, message) {
+            _showMissingParameterDialog(title, message)
         }
     }
 
@@ -209,8 +228,34 @@ ApplicationWindow {
         }
     }
 
+    QGCPopupDialogFactory {
+        id: missingParameterDialogFactory
+        dialogComponent: missingParameterDialogComponent
+    }
+
+    Component {
+        id: missingParameterDialogComponent
+
+        MissingParameterWarningDialog {
+        }
+    }
+
+    Connections {
+        target: mainWindow._missingParameterDialog
+
+        function onSuppressWarningRequested() {
+            mainWindow._suppressMissingParameterWarning = true
+        }
+
+        function onClosed() {
+            mainWindow._missingParameterDialog = null
+        }
+    }
+
     property bool _forceClose: false
     property bool suppressCriticalVehicleMessages: false
+    property var _missingParameterDialog: null
+    property bool _suppressMissingParameterWarning: false
 
     function finishCloseProcess() {
         _forceClose = true

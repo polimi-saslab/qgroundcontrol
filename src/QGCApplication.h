@@ -53,8 +53,8 @@ public:
     /// Returns true if Qt debug output should be logged to a file
     bool logOutput() const { return _logOutput; }
 
-    /// Used to report a missing Parameter. Warning will be displayed to user. Method may be called
-    /// multiple times.
+    /// Used to report a missing parameter. The warning is displayed unless the user has suppressed it.
+    /// Method may be called multiple times.
     void reportMissingParameter(int componentId, const QString &name);
 
     /// @return true: Fake ui into showing mobile interface
@@ -95,6 +95,7 @@ public:
 
 signals:
     void languageChanged(const QLocale &locale);
+    void missingParameterWarningRequested(const QString &title, const QString &message);
 
 public slots:
     void qmlAttemptWindowClose();

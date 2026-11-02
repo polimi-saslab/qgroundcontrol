@@ -275,6 +275,7 @@ bool QGCApplication::_initQmlRootWindow()
     _qmlAppEngine = QGCCorePlugin::instance()->createQmlApplicationEngine(this);
     QObject::connect(_qmlAppEngine, &QQmlApplicationEngine::objectCreationFailed, this, QCoreApplication::quit,
                      Qt::QueuedConnection);
+    _qmlAppEngine->rootContext()->setContextProperty(QStringLiteral("qgcApplication"), this);
 
     // Must register before createRootWindow — root QML references QGCColoredImage which resolves image://coloredsvg/...
     // at load time.
@@ -392,11 +393,22 @@ void QGCApplication::_missingParamsDisplay()
             params += QStringLiteral(", %1").arg(param);
         }
     }
-    _missingParams.clear();
+    const QString message = tr("Parameters are missing from firmware. You may be running a version of firmware which is not "
+                               "fully supported or your firmware has a bug in it. Missing params: %1")
+                                .arg(params);
+    if (runningUnitTests()) {
+        _missingParams.clear();
+        showAppMessage(message);
+        return;
+    }
 
-    showAppMessage(tr("Parameters are missing from firmware. You may be running a version of firmware which is not "
-                      "fully supported or your firmware has a bug in it. Missing params: %1")
-                       .arg(params));
+    if (!_rootQmlObject()) {
+        _missingParamsDelayedDisplayTimer.start();
+        return;
+    }
+
+    _missingParams.clear();
+    emit missingParameterWarningRequested(applicationName(), message);
 }
 
 QObject* QGCApplication::_rootQmlObject()
