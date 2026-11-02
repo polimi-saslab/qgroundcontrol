@@ -72,5 +72,6 @@ ColumnLayout {
         axis: [ roll, pitch, yaw ]
         showAutoModeChange: true
         showAutoTuning:     true
+        showAxisGrid:       true
     }
 }

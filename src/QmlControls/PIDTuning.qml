@@ -8,6 +8,7 @@ import QGroundControl.Controls
 import QGroundControl.FactControls
 
 RowLayout {
+    id: root
     spacing: _margins
 
     QGCPalette { id: qgcPal }
@@ -22,6 +23,8 @@ RowLayout {
     property bool   showAutoModeChange: false
     property bool   showAutoTuning:     false
     property bool   useAutoTuning:      false
+    property bool   showAxisGrid:       false
+    property bool   _plotting:          true
 
     property real   _margins:           ScreenTools.defaultFontPixelHeight / 2
     property int    _currentAxis:       0
@@ -64,6 +67,9 @@ RowLayout {
     function resetGraphs() {
         for (var i = 0; i < chart.seriesList.length; ++i) {
             chart.seriesList[i].clear()
+        }
+        for (var j = 0; j < axisChartRepeater.count; ++j) {
+            axisChartRepeater.itemAt(j).resetGraph()
         }
         _xAxis.min = 0
         _xAxis.max = 0
@@ -114,7 +120,9 @@ RowLayout {
             chartTitle = axis[_currentAxis].name
         _chartTitle = chartTitle + " " + title
         saveTuningParamValues()
-        resetGraphs()
+        if (!showAxisGrid) {
+            resetGraphs()
+        }
     }
 
     Component.onCompleted: {
@@ -129,31 +137,35 @@ RowLayout {
     Timer {
         id:         dataTimer
         interval:   10
-        running:    true
+        running:    _plotting
         repeat:     true
 
         onTriggered: {
-            _xAxis.max = _msecs / 1000
-            _xAxis.min = _msecs / 1000 - chartDisplaySec
-
             var firstPoint = _msecs == 0
+            if (showAxisGrid) {
+                for (var axisIndex = 0; axisIndex < axisChartRepeater.count; ++axisIndex) {
+                    axisChartRepeater.itemAt(axisIndex).appendData(axis[axisIndex].plot, _msecs / 1000, firstPoint)
+                }
+            } else {
+                _xAxis.max = _msecs / 1000
+                _xAxis.min = _msecs / 1000 - chartDisplaySec
 
-            var len = axis[_currentAxis].plot.length
-            for (var i = 0; i < len; ++i) {
-                var value = axis[_currentAxis].plot[i].value
-                if (!isNaN(value)) {
-                    chart.seriesList[i].append(_msecs/1000, value)
-                    if (firstPoint) {
-                        _yAxis.min = value
-                        _yAxis.max = value
-                    } else {
-                        adjustYAxisMin(_yAxis, value)
-                        adjustYAxisMax(_yAxis, value)
-                    }
-                    // limit history
-                    var minSec = _msecs/1000 - 3*60
-                    while (chart.seriesList[i].count > 0 && chart.seriesList[i].at(0).x < minSec) {
-                        chart.seriesList[i].remove(0)
+                var len = axis[_currentAxis].plot.length
+                for (var i = 0; i < len; ++i) {
+                    var value = axis[_currentAxis].plot[i].value
+                    if (!isNaN(value)) {
+                        chart.seriesList[i].append(_msecs / 1000, value)
+                        if (firstPoint) {
+                            _yAxis.min = value
+                            _yAxis.max = value
+                        } else {
+                            adjustYAxisMin(_yAxis, value)
+                            adjustYAxisMax(_yAxis, value)
+                        }
+                        var minSec = _msecs / 1000 - 3 * 60
+                        while (chart.seriesList[i].count > 0 && chart.seriesList[i].at(0).x < minSec) {
+                            chart.seriesList[i].remove(0)
+                        }
                     }
                 }
             }
@@ -180,10 +192,12 @@ RowLayout {
             font.pointSize:     ScreenTools.defaultFontPointSize
             font.family:        ScreenTools.normalFontFamily
             anchors.horizontalCenter: parent.horizontalCenter
+            visible:            !showAxisGrid
         }
 
         GraphsView {
             id:                     chart
+            visible:                !showAxisGrid
             width:                  Math.max(_minChartWidth, availableWidth - rightPanel.width - parent.spacing - _margins)
             height:                 Math.max(_minChartHeight, availableHeight - leftPanelBottomColumn.height - chartTitleLabel.height - legendRow.height - parent.spacing * 3 - _margins)
 
@@ -242,7 +256,7 @@ RowLayout {
                 }
                 onPositionChanged: (mouse) => {
                     if(_startPoint != undefined) {
-                        dataTimer.running = false
+                        _plotting = false
                         var cp = Qt.point(mouse.x, mouse.y)
                         var dx = (cp.x - _startPoint.x) * _scaling
                         _startPoint = cp
@@ -259,6 +273,7 @@ RowLayout {
 
         Row {
             id:         legendRow
+            visible:    !showAxisGrid
             spacing:    ScreenTools.defaultFontPixelWidth
             anchors.horizontalCenter: parent.horizontalCenter
 
@@ -280,6 +295,31 @@ RowLayout {
             }
         }
 
+        GridLayout {
+            id:                 axisChartGrid
+            visible:            showAxisGrid
+            width:              availableWidth - rightPanel.width - leftPanel.spacing - _margins
+            columns:            2
+            rowSpacing:         ScreenTools.defaultFontPixelHeight / 4
+            columnSpacing:      ScreenTools.defaultFontPixelWidth / 2
+
+            Repeater {
+                id: axisChartRepeater
+                model: showAxisGrid ? axis : []
+
+                PIDTuningChart {
+                    axisData:               modelData
+                    pageTitle:              root.title
+                    unit:                   root.unit
+                    chartDisplaySec:        root.chartDisplaySec
+                    Layout.fillWidth:       true
+                    Layout.preferredWidth:  (axisChartGrid.width - axisChartGrid.columnSpacing) / 2
+                    Layout.preferredHeight: Math.max(ScreenTools.defaultFontPixelHeight * 11,
+                                                     (availableHeight - leftPanelBottomColumn.height) / Math.ceil(axis.length / 2))
+                }
+            }
+        }
+
         Column {
             id:         leftPanelBottomColumn
             spacing:    ScreenTools.defaultFontPixelHeight / 4
@@ -293,20 +333,20 @@ RowLayout {
                 }
 
                 QGCButton {
-                    text:       dataTimer.running ? qsTr("Stop") : qsTr("Start")
+                    text:       _plotting ? qsTr("Stop") : qsTr("Start")
                     onClicked: {
-                        dataTimer.running = !dataTimer.running
+                        _plotting = !_plotting
                         _last_t = 0
                         if (showAutoModeChange && autoModeChange.checked) {
-                            globals.activeVehicle.flightMode = dataTimer.running ? globals.activeVehicle.stabilizedFlightMode : globals.activeVehicle.pauseFlightMode
+                            globals.activeVehicle.flightMode = _plotting ? globals.activeVehicle.stabilizedFlightMode : globals.activeVehicle.pauseFlightMode
                         }
                     }
                 }
                 Connections {
                     target: globals.activeVehicle
                     onArmedChanged: {
-                        if (armed && !dataTimer.running) { // start plotting on arming if not already running
-                            dataTimer.running = true
+                        if (armed && !_plotting) { // start plotting on arming if not already running
+                            _plotting = true
                             _last_t = 0
                         }
                     }
@@ -319,7 +359,7 @@ RowLayout {
                 text:   qsTr("Automatic Flight Mode Switching")
                 onClicked: {
                     if (checked)
-                        dataTimer.running = false
+                        _plotting = false
                 }
             }
 

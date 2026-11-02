@@ -101,5 +101,6 @@ ColumnLayout {
         tuningMode: Vehicle.ModeVelocityAndPosition
         unit: "m/s"
         axis: [ horizontal, vertical ]
+        showAxisGrid: true
     }
 }
