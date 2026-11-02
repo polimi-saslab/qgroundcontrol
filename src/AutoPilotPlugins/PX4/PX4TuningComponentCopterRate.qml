@@ -55,6 +55,7 @@ ColumnLayout {
         chartDisplaySec:    3
         showAutoModeChange: true
         showAutoTuning:     true
+        showAxisGrid:       true
 
         property var roll: QtObject {
             property string name: qsTr("Roll")
