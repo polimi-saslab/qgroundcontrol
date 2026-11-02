@@ -30,8 +30,42 @@ ColumnLayout {
         availableWidth:     _availableWidth
         availableHeight:    _availableHeight - pidTuning.y
 
-        property var horizontal: QtObject {
-            property string name: qsTr("Horizontal")
+        property var horizontalX: QtObject {
+            property string name: qsTr("Horizontal X")
+            property string plotTitle: qsTr("Horizontal (X direction, forwards/backwards)")
+            property var plot: [
+                { name: "Response", value: globals.activeVehicle.localPosition.vx.value },
+                { name: "Setpoint", value: globals.activeVehicle.localPositionSetpoint.vx.value }
+            ]
+            property var params: ListModel {
+                ListElement {
+                    title:          qsTr("Proportional gain (MPC_XY_VEL_P_ACC)")
+                    description:    qsTr("Increase for more responsiveness, reduce if the velocity overshoots (and increasing D does not help).")
+                    param:          "MPC_XY_VEL_P_ACC"
+                    min:            1.2
+                    max:            5
+                    step:           0.05
+                }
+                ListElement {
+                    title:          qsTr("Integral gain (MPC_XY_VEL_I_ACC)")
+                    description:    qsTr("Increase to reduce steady-state error (e.g. wind)")
+                    param:          "MPC_XY_VEL_I_ACC"
+                    min:            0.2
+                    max:            10
+                    step:           0.2
+                }
+                ListElement {
+                    title:          qsTr("Differential gain (MPC_XY_VEL_D_ACC)")
+                    description:    qsTr("Damping: increase to reduce overshoots and oscillations, but not higher than really needed.")
+                    param:          "MPC_XY_VEL_D_ACC"
+                    min:            0.1
+                    max:            2
+                    step:           0.05
+                }
+            }
+        }
+        property var horizontalY: QtObject {
+            property string name: qsTr("Horizontal Y")
             property string plotTitle: qsTr("Horizontal (Y direction, sidewards)")
             property var plot: [
                 { name: "Response", value: globals.activeVehicle.localPosition.vy.value },
@@ -100,7 +134,7 @@ ColumnLayout {
         title: qsTr("Velocity")
         tuningMode: Vehicle.ModeVelocityAndPosition
         unit: "m/s"
-        axis: [ horizontal, vertical ]
+        axis: [ horizontalX, horizontalY, vertical ]
         showAxisGrid: true
     }
 }

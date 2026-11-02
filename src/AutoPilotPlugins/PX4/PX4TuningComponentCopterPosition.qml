@@ -30,8 +30,26 @@ ColumnLayout {
         availableWidth:     _availableWidth
         availableHeight:    _availableHeight - pidTuning.y
 
-        property var horizontal: QtObject {
-            property string name: qsTr("Horizontal")
+        property var horizontalX: QtObject {
+            property string name: qsTr("Horizontal X")
+            property string plotTitle: qsTr("Horizontal (X direction, forwards/backwards)")
+            property var plot: [
+                { name: "Response", value: globals.activeVehicle.localPosition.x.value },
+                { name: "Setpoint", value: globals.activeVehicle.localPositionSetpoint.x.value }
+            ]
+            property var params: ListModel {
+                ListElement {
+                    title:          qsTr("Proportional gain (MPC_XY_P)")
+                    description:    qsTr("Increase for more responsiveness, reduce if the position overshoots (there is only a setpoint when hovering, i.e. when centering the stick).")
+                    param:          "MPC_XY_P"
+                    min:            0
+                    max:            2
+                    step:           0.05
+                }
+            }
+        }
+        property var horizontalY: QtObject {
+            property string name: qsTr("Horizontal Y")
             property string plotTitle: qsTr("Horizontal (Y direction, sidewards)")
             property var plot: [
                 { name: "Response", value: globals.activeVehicle.localPosition.y.value },
@@ -68,7 +86,7 @@ ColumnLayout {
         title: qsTr("Position")
         tuningMode: Vehicle.ModeVelocityAndPosition
         unit: "m"
-        axis: [ horizontal, vertical ]
+        axis: [ horizontalX, horizontalY, vertical ]
         showAxisGrid: true
         chartDisplaySec: 50
     }
