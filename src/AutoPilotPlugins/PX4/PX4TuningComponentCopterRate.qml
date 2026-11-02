@@ -72,12 +72,12 @@ ColumnLayout {
                     step:           0.05
                 }
                 ListElement {
-                    title:          qsTr("Differential Gain (MC_ROLLRATE_D)")
-                    description:    qsTr("Damping: increase to reduce overshoots and oscillations, but not higher than really needed.")
-                    param:          "MC_ROLLRATE_D"
-                    min:            0.0004
-                    max:            0.01
-                    step:           0.0002
+                    title:          qsTr("Proportional Gain (MC_ROLLRATE_P)")
+                    description:    qsTr("Roll rate proportional gain.")
+                    param:          "MC_ROLLRATE_P"
+                    min:            0.01
+                    max:            0.5
+                    step:           0.01
                 }
                 ListElement {
                     title:          qsTr("Integral Gain (MC_ROLLRATE_I)")
@@ -86,6 +86,14 @@ ColumnLayout {
                     min:            0.1
                     max:            0.5
                     step:           0.025
+                }
+                ListElement {
+                    title:          qsTr("Differential Gain (MC_ROLLRATE_D)")
+                    description:    qsTr("Damping: increase to reduce overshoots and oscillations, but not higher than really needed.")
+                    param:          "MC_ROLLRATE_D"
+                    min:            0.0004
+                    max:            0.01
+                    step:           0.0002
                 }
             }
         }
@@ -105,12 +113,12 @@ ColumnLayout {
                     step:           0.05
                 }
                 ListElement {
-                    title:          qsTr("Differential Gain (MC_PITCHRATE_D)")
-                    description:    qsTr("Damping: increase to reduce overshoots and oscillations, but not higher than really needed.")
-                    param:          "MC_PITCHRATE_D"
-                    min:            0.0004
-                    max:            0.01
-                    step:           0.0002
+                    title:          qsTr("Proportional Gain (MC_PITCHRATE_P)")
+                    description:    qsTr("Pitch rate proportional gain.")
+                    param:          "MC_PITCHRATE_P"
+                    min:            0.01
+                    max:            0.6
+                    step:           0.01
                 }
                 ListElement {
                     title:          qsTr("Integral Gain (MC_PITCHRATE_I)")
@@ -119,6 +127,14 @@ ColumnLayout {
                     min:            0.1
                     max:            0.5
                     step:           0.025
+                }
+                ListElement {
+                    title:          qsTr("Differential Gain (MC_PITCHRATE_D)")
+                    description:    qsTr("Damping: increase to reduce overshoots and oscillations, but not higher than really needed.")
+                    param:          "MC_PITCHRATE_D"
+                    min:            0.0004
+                    max:            0.01
+                    step:           0.0002
                 }
             }
         }
@@ -138,12 +154,28 @@ ColumnLayout {
                     step:           0.05
                 }
                 ListElement {
+                    title:          qsTr("Proportional Gain (MC_YAWRATE_P)")
+                    description:    qsTr("Yaw rate proportional gain.")
+                    param:          "MC_YAWRATE_P"
+                    min:            0.0
+                    max:            0.6
+                    step:           0.01
+                }
+                ListElement {
                     title:          qsTr("Integral Gain (MC_YAWRATE_I)")
                     description:    qsTr("Generally does not need much adjustment, reduce this when seeing slow oscillations.")
                     param:          "MC_YAWRATE_I"
                     min:            0.04
                     max:            0.4
                     step:           0.02
+                }
+                ListElement {
+                    title:          qsTr("Differential Gain (MC_YAWRATE_D)")
+                    description:    qsTr("Damping: increase to reduce overshoots and oscillations, but not higher than really needed.")
+                    param:          "MC_YAWRATE_D"
+                    min:            0.0
+                    max:            0.01
+                    step:           0.0005
                 }
             }
         }
