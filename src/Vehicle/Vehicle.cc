@@ -1057,10 +1057,29 @@ void Vehicle::_handleExtendedSysState(mavlink_message_t& message)
     }
 
     if (vtol()) {
+        VtolState state = VtolState::Undefined;
+        switch (extendedState.vtol_state) {
+            case MAV_VTOL_STATE_TRANSITION_TO_FW:
+            case MAV_VTOL_STATE_TRANSITION_TO_MC:
+            case MAV_VTOL_STATE_MC:
+            case MAV_VTOL_STATE_FW:
+                state = static_cast<VtolState>(extendedState.vtol_state);
+                break;
+            default:
+                break;
+        }
+        const bool stateChanged = state != _vtolState;
+        _vtolState = state;
         bool vtolInFwdFlight = extendedState.vtol_state == MAV_VTOL_STATE_FW;
         if (vtolInFwdFlight != _vtolInFwdFlight) {
             _vtolInFwdFlight = vtolInFwdFlight;
             emit vtolInFwdFlightChanged(vtolInFwdFlight);
+        }
+        if (stateChanged) {
+            emit vtolStateChanged();
+            if (_vtolState != VtolState::Undefined) {
+                _say(tr("%1 %2").arg(_vehicleIdSpeech()).arg(vtolStateString()));
+            }
         }
     }
 }
@@ -2518,8 +2537,28 @@ void Vehicle::setOfflineEditingDefaultComponentId(int defaultComponentId)
     }
 }
 
+QString Vehicle::vtolStateString() const
+{
+    switch (_vtolState) {
+        case VtolState::TransitionToFixedWing:
+            return tr("Transitioning to fixed wing");
+        case VtolState::TransitionToMultiCopter:
+            return tr("Transitioning to multicopter");
+        case VtolState::MultiCopter:
+            return tr("Multicopter flight");
+        case VtolState::FixedWing:
+            return tr("Fixed-wing flight");
+        case VtolState::Undefined:
+            return tr("VTOL state unknown");
+    }
+    return tr("VTOL state unknown");
+}
+
 void Vehicle::setVtolInFwdFlight(bool vtolInFwdFlight)
 {
+    if (!vtol() || (_vtolState != VtolState::MultiCopter && _vtolState != VtolState::FixedWing)) {
+        return;
+    }
     if (_vtolInFwdFlight != vtolInFwdFlight) {
         sendMavCommand(_defaultComponentId,
                        MAV_CMD_DO_VTOL_TRANSITION,

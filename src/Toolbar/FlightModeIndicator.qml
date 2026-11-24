@@ -20,6 +20,29 @@ Item {
 
     property bool _isVTOL:          activeVehicle ? activeVehicle.vtol : false
     property bool _vtolInFWDFlight: activeVehicle ? activeVehicle.vtolInFwdFlight : false
+    readonly property bool _canTransition: activeVehicle &&
+        (activeVehicle.vtolState === Vehicle.MultiCopter || activeVehicle.vtolState === Vehicle.FixedWing)
+    readonly property bool _vtolTransitioning: activeVehicle &&
+        (activeVehicle.vtolState === Vehicle.TransitionToFixedWing ||
+         activeVehicle.vtolState === Vehicle.TransitionToMultiCopter)
+    readonly property color _vtolTransitionColor: qgcPal.colorBlue
+    readonly property string _vtolStateText: {
+        if (!activeVehicle) {
+            return ""
+        }
+        switch (activeVehicle.vtolState) {
+        case Vehicle.MultiCopter:
+            return qsTr("Multicopter")
+        case Vehicle.FixedWing:
+            return qsTr("Fixed-wing")
+        case Vehicle.TransitionToFixedWing:
+            return qsTr("MC → FW")
+        case Vehicle.TransitionToMultiCopter:
+            return qsTr("FW → MC")
+        default:
+            return qsTr("VTOL state unknown")
+        }
+    }
     property var  _vehicleInAir:    activeVehicle ? activeVehicle.airborne || activeVehicle.landing : false
 
     QGCPalette { id: qgcPal }
@@ -48,13 +71,21 @@ Item {
         }
 
         QGCLabel {
-            id:                     vtolModeLabel
-            Layout.alignment:       Qt.AlignVCenter
-            horizontalAlignment:    Text.AlignHCenter
-            text:                   _vtolInFWDFlight ? qsTr("FW\nVTOL") : qsTr("MR\nVTOL")
-            font.pointSize:         ScreenTools.smallFontPointSize
-            wrapMode:               Text.WordWrap
-            visible:                _isVTOL
+            Layout.alignment:   Qt.AlignVCenter
+            text:               "|"
+            color:              qgcPal.text
+            font.pointSize:     control.fontPointSize
+            visible:            control._isVTOL
+        }
+
+        QGCLabel {
+            id:                 vtolModeLabel
+            Layout.alignment:   Qt.AlignVCenter
+            text:               control._vtolStateText
+            color:              control._vtolTransitioning ? control._vtolTransitionColor : qgcPal.text
+            font.pointSize:     control.fontPointSize
+            wrapMode:           Text.NoWrap
+            visible:            control._isVTOL
         }
     }
 
@@ -133,14 +164,27 @@ Item {
                 }
             }
 
+            QGCLabel {
+                Layout.fillWidth:   true
+                text:               control.activeVehicle ? control.activeVehicle.vtolStateString : ""
+                color:              control._vtolTransitioning ? control._vtolTransitionColor : qgcPal.text
+                visible:            control._isVTOL
+                wrapMode:           Text.WordWrap
+            }
+
             QGCDelayButton {
                 id:                 vtolTransitionButton
                 Layout.fillWidth:   true
-                text:               _vtolInFWDFlight ? qsTr("Transition to Multi-Rotor") : qsTr("Transition to Fixed Wing")
+                text:               control._canTransition ?
+                                        (control._vtolInFWDFlight ? qsTr("Transition to multicopter") : qsTr("Transition to fixed-wing")) :
+                                        (control.activeVehicle ? control.activeVehicle.vtolStateString : "")
                 visible:            _isVTOL && _vehicleInAir
+                enabled:            control._canTransition
 
                 onActivated: {
-                    _activeVehicle.vtolInFwdFlight = !_vtolInFWDFlight
+                    if (control.activeVehicle && control._canTransition) {
+                        control.activeVehicle.vtolInFwdFlight = !control._vtolInFWDFlight
+                    }
                     mainWindow.closeIndicatorDrawer()
                 }
             }
