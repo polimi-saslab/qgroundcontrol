@@ -25,6 +25,10 @@ SetupPage {
             readonly property real _channelComboWidth: ScreenTools.defaultFontPixelWidth * 13
 
             Component.onCompleted: {
+                if (controller.parameterExists(-1, "RC_MAP_WP_MIX")) {
+                    _switchNameList.push("RC_MAP_WP_MIX")
+                    _switchTHList.push("RC_WP_MIX_TH")
+                }
                 if (controller.vehicle.vtol) {
                     _switchNameList.push("RC_MAP_TRANS_SW")
                     _switchTHList.push("RC_TRANS_TH")
