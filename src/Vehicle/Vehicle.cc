@@ -1056,31 +1056,39 @@ void Vehicle::_handleExtendedSysState(mavlink_message_t& message)
         break;
     }
 
-    if (vtol()) {
-        VtolState state = VtolState::Undefined;
-        switch (extendedState.vtol_state) {
-            case MAV_VTOL_STATE_TRANSITION_TO_FW:
-            case MAV_VTOL_STATE_TRANSITION_TO_MC:
-            case MAV_VTOL_STATE_MC:
-            case MAV_VTOL_STATE_FW:
-                state = static_cast<VtolState>(extendedState.vtol_state);
-                break;
-            default:
-                break;
-        }
-        const bool stateChanged = state != _vtolState;
-        _vtolState = state;
-        bool vtolInFwdFlight = extendedState.vtol_state == MAV_VTOL_STATE_FW;
-        if (vtolInFwdFlight != _vtolInFwdFlight) {
-            _vtolInFwdFlight = vtolInFwdFlight;
-            emit vtolInFwdFlightChanged(vtolInFwdFlight);
-        }
-        if (stateChanged) {
-            emit vtolStateChanged();
-            if (_vtolState != VtolState::Undefined) {
-                _say(tr("%1 %2").arg(_vehicleIdSpeech()).arg(vtolStateString()));
-            }
-        }
+    _handleVtolStateChanged(extendedState.vtol_state);
+}
+
+void Vehicle::_handleVtolStateChanged(uint8_t vtolState)
+{
+    if (!vtol()) {
+        return;
+    }
+
+    VtolState state = VtolState::Undefined;
+    switch (vtolState) {
+        case MAV_VTOL_STATE_TRANSITION_TO_FW:
+        case MAV_VTOL_STATE_TRANSITION_TO_MC:
+        case MAV_VTOL_STATE_MC:
+        case MAV_VTOL_STATE_FW:
+            state = static_cast<VtolState>(vtolState);
+            break;
+        default:
+            break;
+    }
+    if (state == _vtolState) {
+        return;
+    }
+
+    _vtolState = state;
+    const bool vtolInFwdFlight = state == VtolState::FixedWing;
+    if (vtolInFwdFlight != _vtolInFwdFlight) {
+        _vtolInFwdFlight = vtolInFwdFlight;
+        emit vtolInFwdFlightChanged(vtolInFwdFlight);
+    }
+    emit vtolStateChanged();
+    if (_vtolState != VtolState::Undefined) {
+        _say(tr("%1 %2").arg(_vehicleIdSpeech()).arg(vtolStateString()));
     }
 }
 
