@@ -111,6 +111,7 @@ class Vehicle : public VehicleFactGroup, public VehicleTypes
     friend class SendMavCommandWithHandlerTest;     // Unit test
     friend class RequestMessageTest;                // Unit test
     friend class RetryableRequestMessageStateTest;  // Unit test
+    friend class VehicleVtolStateTest;              // Unit test
 #endif
     friend class GimbalController;                  // Allow GimbalController to call _addFactGroup
 
@@ -141,6 +142,16 @@ public:
         CheckListFailed,
     };
     Q_ENUM(CheckList)
+
+    enum class VtolState
+    {
+        Undefined = MAV_VTOL_STATE_UNDEFINED,
+        TransitionToFixedWing = MAV_VTOL_STATE_TRANSITION_TO_FW,
+        TransitionToMultiCopter = MAV_VTOL_STATE_TRANSITION_TO_MC,
+        MultiCopter = MAV_VTOL_STATE_MC,
+        FixedWing = MAV_VTOL_STATE_FW,
+    };
+    Q_ENUM(VtolState)
 
     Q_PROPERTY(int                  id                          READ id                                                             CONSTANT)
     Q_PROPERTY(AutoPilotPlugin*     autopilotPlugin             MEMBER _autopilotPlugin                                             CONSTANT)
@@ -197,6 +208,8 @@ public:
     Q_PROPERTY(QString              hobbsMeter                  READ hobbsMeter                                                     NOTIFY hobbsMeterChanged)
     Q_PROPERTY(bool                 inFwdFlight                 READ inFwdFlight                                                    NOTIFY inFwdFlightChanged)
     Q_PROPERTY(bool                 vtolInFwdFlight             READ vtolInFwdFlight            WRITE setVtolInFwdFlight            NOTIFY vtolInFwdFlightChanged)
+    Q_PROPERTY(VtolState vtolState READ vtolState NOTIFY vtolStateChanged)
+    Q_PROPERTY(QString vtolStateString READ vtolStateString NOTIFY vtolStateChanged)
     Q_PROPERTY(quint64              mavlinkSentCount            READ mavlinkSentCount                                               NOTIFY mavlinkStatusChanged)
     Q_PROPERTY(quint64              mavlinkReceivedCount        READ mavlinkReceivedCount                                           NOTIFY mavlinkStatusChanged)
     Q_PROPERTY(quint64              mavlinkLossCount            READ mavlinkLossCount                                               NOTIFY mavlinkStatusChanged)
@@ -525,7 +538,11 @@ public:
     bool            landing                     () const { return _landing; }
     bool            guidedMode                  () const;
     bool            inFwdFlight                 () const;
-    bool            vtolInFwdFlight             () const { return _vtolInFwdFlight; }
+    bool vtolInFwdFlight() const { return _vtolInFwdFlight; }
+
+    VtolState vtolState() const { return _vtolState; }
+
+    QString vtolStateString() const;
     uint8_t         baseMode                    () const { return _base_mode; }
     uint32_t        customMode                  () const { return _custom_mode; }
     /// Custom mode used for health/arming-check mode-group lookups: prefers the
@@ -784,6 +801,7 @@ signals:
     void guidedModeChanged              (bool guidedMode);
     void inFwdFlightChanged             ();
     void vtolInFwdFlightChanged         (bool vtolInFwdFlight);
+    void vtolStateChanged();
     void prearmErrorChanged             (const QString& prearmError);
     void soloFirmwareChanged            (bool soloFirmware);
     void defaultCruiseSpeedChanged      (double cruiseSpeed);
@@ -896,6 +914,7 @@ private:
     void _handleBatteryStatus           (mavlink_message_t& message);
     void _handleSysStatus               (mavlink_message_t& message);
     void _handleExtendedSysState        (mavlink_message_t& message);
+    void _handleVtolStateChanged(uint8_t vtolState);
     void _handleCommandAck              (mavlink_message_t& message);
     void _handleGpsRawInt               (mavlink_message_t& message);
     void _handleGlobalPositionInt       (mavlink_message_t& message);
@@ -970,6 +989,7 @@ private:
     bool _airborne = false;
     bool            _landing = false;
     bool            _vtolInFwdFlight = false;
+    VtolState _vtolState = VtolState::Undefined;
     uint32_t        _onboardControlSensorsPresent = 0;
     uint32_t        _onboardControlSensorsEnabled = 0;
     uint32_t        _onboardControlSensorsHealth = 0;

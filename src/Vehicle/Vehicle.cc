@@ -1056,12 +1056,40 @@ void Vehicle::_handleExtendedSysState(mavlink_message_t& message)
         break;
     }
 
-    if (vtol()) {
-        bool vtolInFwdFlight = extendedState.vtol_state == MAV_VTOL_STATE_FW;
-        if (vtolInFwdFlight != _vtolInFwdFlight) {
-            _vtolInFwdFlight = vtolInFwdFlight;
-            emit vtolInFwdFlightChanged(vtolInFwdFlight);
-        }
+    _handleVtolStateChanged(extendedState.vtol_state);
+}
+
+void Vehicle::_handleVtolStateChanged(uint8_t vtolState)
+{
+    if (!vtol()) {
+        return;
+    }
+
+    VtolState state = VtolState::Undefined;
+    switch (vtolState) {
+        case MAV_VTOL_STATE_TRANSITION_TO_FW:
+        case MAV_VTOL_STATE_TRANSITION_TO_MC:
+        case MAV_VTOL_STATE_MC:
+        case MAV_VTOL_STATE_FW:
+            state = static_cast<VtolState>(vtolState);
+            break;
+        default:
+            break;
+    }
+    if (state == _vtolState) {
+        return;
+    }
+
+    _vtolState = state;
+    const bool vtolInFwdFlight = state == VtolState::FixedWing;
+    if ((state == VtolState::MultiCopter || state == VtolState::FixedWing) &&
+        vtolInFwdFlight != _vtolInFwdFlight) {
+        _vtolInFwdFlight = vtolInFwdFlight;
+        emit vtolInFwdFlightChanged(vtolInFwdFlight);
+    }
+    emit vtolStateChanged();
+    if (_vtolState != VtolState::Undefined) {
+        _say(tr("%1 %2").arg(_vehicleIdSpeech()).arg(vtolStateString()));
     }
 }
 
@@ -2518,8 +2546,28 @@ void Vehicle::setOfflineEditingDefaultComponentId(int defaultComponentId)
     }
 }
 
+QString Vehicle::vtolStateString() const
+{
+    switch (_vtolState) {
+        case VtolState::TransitionToFixedWing:
+            return tr("Transitioning to fixed wing");
+        case VtolState::TransitionToMultiCopter:
+            return tr("Transitioning to multicopter");
+        case VtolState::MultiCopter:
+            return tr("Multicopter flight");
+        case VtolState::FixedWing:
+            return tr("Fixed-wing flight");
+        case VtolState::Undefined:
+            return tr("VTOL state unknown");
+    }
+    return tr("VTOL state unknown");
+}
+
 void Vehicle::setVtolInFwdFlight(bool vtolInFwdFlight)
 {
+    if (!vtol() || (_vtolState != VtolState::MultiCopter && _vtolState != VtolState::FixedWing)) {
+        return;
+    }
     if (_vtolInFwdFlight != vtolInFwdFlight) {
         sendMavCommand(_defaultComponentId,
                        MAV_CMD_DO_VTOL_TRANSITION,
