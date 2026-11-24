@@ -1082,7 +1082,8 @@ void Vehicle::_handleVtolStateChanged(uint8_t vtolState)
 
     _vtolState = state;
     const bool vtolInFwdFlight = state == VtolState::FixedWing;
-    if (vtolInFwdFlight != _vtolInFwdFlight) {
+    if ((state == VtolState::MultiCopter || state == VtolState::FixedWing) &&
+        vtolInFwdFlight != _vtolInFwdFlight) {
         _vtolInFwdFlight = vtolInFwdFlight;
         emit vtolInFwdFlightChanged(vtolInFwdFlight);
     }
